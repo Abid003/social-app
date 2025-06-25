@@ -1,13 +1,39 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePosts } from "@/context/PostsContext";
 
 export default function PostEditor() {
   const [content, setContent] = useState("");
+  const { posts, setPosts } = usePosts();
+
+  // Load posts from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("posts");
+    if (saved) {
+      try {
+        setPosts(JSON.parse(saved));
+      } catch {}
+    }
+    // eslint-disable-next-line
+  }, []);
+
+  // Save posts to localStorage whenever posts change
+  useEffect(() => {
+    localStorage.setItem("posts", JSON.stringify(posts));
+  }, [posts]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
-    alert(`Fake submit post: ${content}`);
+    const newPost = {
+      id: Date.now(),
+      author: "abid",
+      content,
+      comments: [],
+    };
+    setPosts([newPost, ...posts]);
     setContent("");
   };
+
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", gap: 8 }}>
       <input

@@ -1,46 +1,55 @@
+"use client";
 import { useState } from "react";
+import { usePosts } from "@/context/PostsContext";
+import { Input, Button, HStack } from "@chakra-ui/react";
 
-export default function CommentForm({ postId }: { postId: number }) {
+interface CommentFormProps {
+  postId: number;
+}
+
+export default function CommentForm({ postId }: CommentFormProps) {
   const [text, setText] = useState("");
+  const { posts, setPosts } = usePosts();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim()) return;
-    alert(`Fake submit comment: ${text} (for post ${postId})`);
+    setPosts(
+      posts.map((post) => {
+        if (String(post.id) === String(postId)) {
+          const safeComments = Array.isArray(post.comments) ? post.comments : [];
+          return {
+            ...post,
+            comments: [
+              ...safeComments,
+              {
+                id: Math.floor(Math.random() * 1e9), // client-only unique id
+                author: "abid", // or get from user context
+                text,
+              },
+            ],
+          };
+        }
+        return post;
+      })
+    );
     setText("");
   };
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        marginTop: 8,
-        display: "flex",
-        gap: 8,
-      }}
-    >
-      <input
-        type="text"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="Add a comment..."
-        style={{
-          flex: 1,
-          padding: 6,
-          borderRadius: 4,
-          border: "1px solid #ccc",
-        }}
-      />
-      <button
-        type="submit"
-        style={{
-          padding: "6px 12px",
-          borderRadius: 4,
-          background: "#3182ce",
-          color: "#fff",
-          border: "none",
-        }}
-      >
-        Post
-      </button>
+    <form onSubmit={handleSubmit}>
+      <HStack style={{ marginTop: 8, gap: 8 }}>
+        <Input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Add a comment..."
+          size="sm"
+          bg="white"
+        />
+        <Button type="submit" colorScheme="teal" size="sm" px={4}>
+          Comment
+        </Button>
+      </HStack>
     </form>
   );
 }
